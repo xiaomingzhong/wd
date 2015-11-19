@@ -89,7 +89,7 @@ public class Wddl {
 	void getCodeTables(String market) {
 		codes = client.getCodeTable(market);
 
-		File codeFile = new File(dir, market + "_CodeTable.txt");
+		File codeFile = new File(dirBase, market + "_CodeTable.txt");
 		Writer out = null;
 		try {
 			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(codeFile)));
@@ -391,10 +391,11 @@ public class Wddl {
 	}
 
 	void run() {
+		dirBase = new File("/usr/wddl");
+
 		getCodeTables("SZ");
 		getCodeTables("SH");
 
-		dirBase = new File("/usr/wddl");
 		if (!dirBase.exists()) {
 			if (dir.mkdir()) {
 				System.out.println("创建数据根目录成功");
