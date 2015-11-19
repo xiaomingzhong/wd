@@ -272,7 +272,18 @@ public class Wddl {
 				StringBuilder sb = new StringBuilder();
 
 				Transaction trans = objs[i];
-				sb.append(trans.getCode()).append(" ").append(trans.getWindCode()).append(" ").append(trans.getDate()).append(" ").append(trans.getTime()).append(" ").append(trans.getIndex()).append(" ").append(trans.getFunctionCode()).append(" ").append(trans.getOrderKind()).append(" ").append(trans.getBSFlag()).append(" ").append(trans.getTradePrice()).append(" ").append(trans.getTradeVolume()).append(" ").append(trans.getAskOrder()).append(" ").append(trans.getBidOrder()).append(" ");
+				sb.append(trans.getWindCode()) //
+						.append(" ").append(trans.getCode())//
+						.append(" ").append(trans.getDate())//
+						.append(" ").append(trans.getTime())//
+						.append(" ").append(trans.getIndex())//
+						.append(" ").append(trans.getFunctionCode())//
+						.append(" ").append(trans.getOrderKind())//
+						.append(" ").append(trans.getBSFlag())//
+						.append(" ").append(trans.getTradePrice())//
+						.append(" ").append(trans.getTradeVolume())//
+						.append(" ").append(trans.getAskOrder())//
+						.append(" ").append(trans.getBidOrder());
 
 				String line = sb.toString();
 				System.out.println(line);
@@ -312,7 +323,17 @@ public class Wddl {
 		for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
 			StringBuilder sb = new StringBuilder();
 
-			sb.append(objs[i].getCode()).append(" ").append(objs[i].getWindCode()).append(" ").append(objs[i].getDate()).append(" ").append(objs[i].getTime()).append(" ").append(objs[i].getIndex()).append(" ").append(objs[i].getFunctionCode()).append(" ").append(objs[i].getOrderKind()).append(" ").append(objs[i].getOrder()).append(" ").append(objs[i].getOrderPrice()).append(" ").append(objs[i].getOrderVolume()).append(" ");
+			sb.append(objs[i].getWindCode()) //
+					.append(" ").append(objs[i].getCode()) //
+					.append(" ").append(objs[i].getDate())//
+					.append(" ").append(objs[i].getTime())//
+					.append(" ").append(objs[i].getIndex())//
+					.append(" ").append(objs[i].getFunctionCode())//
+					.append(" ").append(objs[i].getOrderKind())//
+					.append(" ").append(objs[i].getOrder())//
+					.append(" ").append(objs[i].getOrderPrice())//
+					.append(" ").append(objs[i].getOrderVolume())//
+					.append(" ");
 
 			System.out.println(sb.toString());
 		}
