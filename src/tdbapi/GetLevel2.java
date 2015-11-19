@@ -316,11 +316,11 @@ public class GetLevel2 {
 	}
 
 	public static void main(String[] args) {
-
 		if (args.length != 4) {
 			System.out.println("usage:  Demo ip port user password");
 			System.exit(1);
 		}
+		
 		GetLevel2 d = new GetLevel2(args[0], Integer.parseInt(args[1]), args[2], args[3]);
 
 		System.out.println("*******************************begin test****************************");
