@@ -1,4 +1,4 @@
-package tdbapi;
+package tdbapi0;
 
 import cn.com.wind.td.tdb.*;
 
