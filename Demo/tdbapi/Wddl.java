@@ -54,9 +54,10 @@ public class Wddl {
 	int m_testBeginTime = 0;
 	int m_testEndTime = -1;
 
-	int m_nMaxOutputCount = 15;
+	int m_nMaxOutputCount = Integer.MAX_VALUE;
 	private File dir;
 	private File dataFile;
+	private Code[] codes;
 
 	Wddl(String ip, int port, String username, String password) {
 		OPEN_SETTINGS setting = new OPEN_SETTINGS();
@@ -86,14 +87,19 @@ public class Wddl {
 
 	void test_getCodeTable() {
 
-		Code[] codes = client.getCodeTable("SH");
+		codes = client.getCodeTable("SH");
 
 		int nIndex = 0;
 		for (Code code : codes) {
 			if (nIndex++ > m_nMaxOutputCount)
 				break;
 			StringBuffer sb = new StringBuffer();
-			sb.append("CODE: ").append(code.getWindCode()).append(" ").append(code.getMarket()).append(" ").append(code.getCode()).append(" ").append(code.getENName()).append(" ").append(code.getCNName()).append(" ").append(code.getType());
+			sb.append(code.getWindCode()) //
+					.append(" ").append(code.getCode())//
+					.append(" ").append(code.getMarket())//
+					.append(" ").append(code.getCNName())//
+					.append(" ").append(code.getENName())//
+					.append(" ").append(code.getType());
 
 			System.out.println(sb.toString());
 		}
@@ -247,10 +253,10 @@ public class Wddl {
 
 	}
 
-	void test_getTransaction() {
+	void test_getTransaction(String windCode) {
 		ReqTransaction req = new ReqTransaction();
 
-		req.setCode(m_testCode);
+		req.setCode(windCode);
 		req.setBeginDate(m_testBeginDate);
 		req.setEndDate(m_testEndDate);
 		req.setBeginTime(m_testBeginTime);
@@ -365,6 +371,9 @@ public class Wddl {
 	}
 
 	void run() {
+
+		test_getCodeTable();
+
 		dir = new File("/usr/wddl/" + "20151119");
 		if (!dir.exists()) {
 			if (dir.mkdir()) {
@@ -374,22 +383,24 @@ public class Wddl {
 			}
 		}
 
-		dataFile = new File(dir, "600309.txt");
+		for (Code code : codes) {
+			dataFile = new File(dir, code.getCode() + ".txt");
 
-		//		test_getKLine();
-		//		test_getTick();
-		//		try {
-		//			test_getTickAB();
-		//		} catch (Exception ex) {
-		//			System.out.println("Fail to call getTickAB(?). Exception: " + ex.getMessage());
-		//		}
-		//
-		//		test_getFuture();
-		//		test_getFutureAB();
-		//		test_getCodeInfo();
-		test_getTransaction();
-		//		test_getOrder();
-		//		test_getOrderQueue();
+			//		test_getKLine();
+			//		test_getTick();
+			//		try {
+			//			test_getTickAB();
+			//		} catch (Exception ex) {
+			//			System.out.println("Fail to call getTickAB(?). Exception: " + ex.getMessage());
+			//		}
+			//
+			//		test_getFuture();
+			//		test_getFutureAB();
+			//		test_getCodeInfo();
+			test_getTransaction(code.getWindCode());
+			//		test_getOrder();
+			//		test_getOrderQueue();
+		}
 	}
 
 	public static void main(String[] args) {
