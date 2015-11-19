@@ -268,7 +268,7 @@ public class Wddl {
 		try {
 			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
 
-			for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
+			for (int i = 0; i < objs.length; ++i) {//&& i < m_nMaxOutputCount
 				StringBuilder sb = new StringBuilder();
 
 				Transaction trans = objs[i];
@@ -372,9 +372,8 @@ public class Wddl {
 	}
 
 	public static void main(String[] args) {
-
 		if (args.length != 4) {
-			System.out.println("usage:  Demo ip port user password");
+			System.out.println("usage:  Wddl ip port user password");
 			System.exit(1);
 		}
 
