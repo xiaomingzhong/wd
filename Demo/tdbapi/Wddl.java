@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 import cn.com.wind.td.tdb.CYCTYPE;
 import cn.com.wind.td.tdb.Code;
@@ -55,7 +56,7 @@ public class Wddl {
 	int m_testEndTime = -1;
 
 	int m_nMaxOutputCount = Integer.MAX_VALUE;
-	private File dir;
+	private File dir, dirBase;
 	private File dataFile;
 	private Code[] codes;
 
@@ -85,23 +86,42 @@ public class Wddl {
 		}
 	}
 
-	void test_getCodeTable() {
+	void getCodeTables(String market) {
+		codes = client.getCodeTable(market);
 
-		codes = client.getCodeTable("SH");
+		File codeFile = new File(dir, market + "_CodeTable.txt");
+		Writer out = null;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(codeFile)));
 
-		int nIndex = 0;
-		for (Code code : codes) {
-			if (nIndex++ > m_nMaxOutputCount)
-				break;
-			StringBuffer sb = new StringBuffer();
-			sb.append(code.getWindCode()) //
-					.append(" ").append(code.getCode())//
-					.append(" ").append(code.getMarket())//
-					.append(" ").append(code.getCNName())//
-					.append(" ").append(code.getENName())//
-					.append(" ").append(code.getType());
+			int nIndex = 0;
+			for (Code code : codes) {
+				if (nIndex++ > m_nMaxOutputCount)
+					break;
+				StringBuffer sb = new StringBuffer();
+				sb.append(code.getWindCode()) //
+						.append(" ").append(code.getCode())//
+						.append(" ").append(code.getMarket())//
+						.append(" ").append(code.getCNName())//
+						.append(" ").append(code.getENName())//
+						.append(" ").append(code.getType());
 
-			System.out.println(sb.toString());
+				String line = sb.toString();
+				System.out.println(line);
+
+				out.write(line + "\n");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
@@ -253,7 +273,7 @@ public class Wddl {
 
 	}
 
-	void test_getTransaction(String windCode) {
+	void getTransaction(String windCode) {
 		ReqTransaction req = new ReqTransaction();
 
 		req.setCode(windCode);
@@ -371,18 +391,27 @@ public class Wddl {
 	}
 
 	void run() {
+		getCodeTables("SZ");
+		getCodeTables("SH");
 
-		test_getCodeTable();
-
-		dir = new File("/usr/wddl/" + "20151119");
-		if (!dir.exists()) {
+		dirBase = new File("/usr/wddl");
+		if (!dirBase.exists()) {
 			if (dir.mkdir()) {
-				System.out.println("创建目录成功");
+				System.out.println("创建数据根目录成功");
 			} else {
-				System.out.println("创建目录失败.....");
+				System.out.println("创建数据根目录失败.....");
 			}
 		}
 
+		if (!dir.exists()) {
+			if (dir.mkdir()) {
+				System.out.println("创建日期目录成功");
+			} else {
+				System.out.println("创建日期目录失败.....");
+			}
+		}
+
+		dir = new File("/usr/wddl/" + "20151119");
 		for (Code code : codes) {
 			dataFile = new File(dir, code.getCode() + ".txt");
 
@@ -397,7 +426,7 @@ public class Wddl {
 			//		test_getFuture();
 			//		test_getFutureAB();
 			//		test_getCodeInfo();
-			test_getTransaction(code.getWindCode());
+			getTransaction(code.getWindCode());
 			//		test_getOrder();
 			//		test_getOrderQueue();
 		}
