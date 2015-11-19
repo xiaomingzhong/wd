@@ -1,6 +1,28 @@
 package tdbapi;
 
-import cn.com.wind.td.tdb.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
+import cn.com.wind.td.tdb.CYCTYPE;
+import cn.com.wind.td.tdb.Code;
+import cn.com.wind.td.tdb.Future;
+import cn.com.wind.td.tdb.FutureAB;
+import cn.com.wind.td.tdb.KLine;
+import cn.com.wind.td.tdb.OPEN_SETTINGS;
+import cn.com.wind.td.tdb.Order;
+import cn.com.wind.td.tdb.OrderQueue;
+import cn.com.wind.td.tdb.ReqFuture;
+import cn.com.wind.td.tdb.ReqKLine;
+import cn.com.wind.td.tdb.ReqTick;
+import cn.com.wind.td.tdb.ReqTransaction;
+import cn.com.wind.td.tdb.ResLogin;
+import cn.com.wind.td.tdb.TDBClient;
+import cn.com.wind.td.tdb.Tick;
+import cn.com.wind.td.tdb.TickAB;
+import cn.com.wind.td.tdb.Transaction;
 
 public class Wddl {
 
@@ -33,6 +55,8 @@ public class Wddl {
 	int m_testEndTime = -1;
 
 	int m_nMaxOutputCount = 15;
+	private File dir;
+	private File dataFile;
 
 	Wddl(String ip, int port, String username, String password) {
 		OPEN_SETTINGS setting = new OPEN_SETTINGS();
@@ -239,13 +263,33 @@ public class Wddl {
 			return;
 		}
 		System.out.println("Success to call getTransaction(?) " + objs.length);
-		for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
-			StringBuilder sb = new StringBuilder();
 
-			Transaction trans = objs[i];
-			sb.append(trans.getCode()).append(" ").append(trans.getWindCode()).append(" ").append(trans.getDate()).append(" ").append(trans.getTime()).append(" ").append(trans.getIndex()).append(" ").append(trans.getFunctionCode()).append(" ").append(trans.getOrderKind()).append(" ").append(trans.getBSFlag()).append(" ").append(trans.getTradePrice()).append(" ").append(trans.getTradeVolume()).append(" ").append(trans.getAskOrder()).append(" ").append(trans.getBidOrder()).append(" ");
+		BufferedWriter out = null;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
 
-			System.out.println(sb.toString());
+			for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
+				StringBuilder sb = new StringBuilder();
+
+				Transaction trans = objs[i];
+				sb.append(trans.getCode()).append(" ").append(trans.getWindCode()).append(" ").append(trans.getDate()).append(" ").append(trans.getTime()).append(" ").append(trans.getIndex()).append(" ").append(trans.getFunctionCode()).append(" ").append(trans.getOrderKind()).append(" ").append(trans.getBSFlag()).append(" ").append(trans.getTradePrice()).append(" ").append(trans.getTradeVolume()).append(" ").append(trans.getAskOrder()).append(" ").append(trans.getBidOrder()).append(" ");
+
+				String line = sb.toString();
+				System.out.println(line);
+
+				out.write(line + "\n");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -300,6 +344,16 @@ public class Wddl {
 	}
 
 	void run() {
+		dir = new File("/usr/wddl/" + "20151119");
+		if (!dir.exists()) {
+			if (dir.mkdir()) {
+				System.out.println("创建目录成功");
+			} else {
+				System.out.println("创建目录失败.....");
+			}
+		}
+
+		dataFile = new File(dir, "600309.txt");
 
 		//		test_getKLine();
 		//		test_getTick();
