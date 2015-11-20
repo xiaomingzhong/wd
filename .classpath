@@ -3,6 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="Demo"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/tdbapi.jar"/>
+	<classpathentry kind="lib" path="libwin/tdbapi.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -6,6 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import cn.com.wind.td.tdb.CYCTYPE;
 import cn.com.wind.td.tdb.Code;
@@ -15,6 +19,7 @@ import cn.com.wind.td.tdb.KLine;
 import cn.com.wind.td.tdb.OPEN_SETTINGS;
 import cn.com.wind.td.tdb.Order;
 import cn.com.wind.td.tdb.OrderQueue;
+import cn.com.wind.td.tdb.REFILLFLAG;
 import cn.com.wind.td.tdb.ReqFuture;
 import cn.com.wind.td.tdb.ReqKLine;
 import cn.com.wind.td.tdb.ReqTick;
@@ -26,6 +31,7 @@ import cn.com.wind.td.tdb.TickAB;
 import cn.com.wind.td.tdb.Transaction;
 
 public class Wddl {
+	public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
 	TDBClient client = new TDBClient();
 
@@ -56,9 +62,11 @@ public class Wddl {
 	int m_testEndTime = -1;
 
 	int m_nMaxOutputCount = Integer.MAX_VALUE;
-	private File dir, dirBase;
-	private File dataFile;
-	private Code[] codes;
+	private File dirDate, dirBase;
+	//private File dataFile;
+	//private Code[] codes;
+
+	private List<Code> codeList = new ArrayList<>();
 
 	Wddl(String ip, int port, String username, String password) {
 		OPEN_SETTINGS setting = new OPEN_SETTINGS();
@@ -87,7 +95,7 @@ public class Wddl {
 	}
 
 	void getCodeTables(String market) {
-		codes = client.getCodeTable(market);
+		Code[] codes = client.getCodeTable(market);
 
 		File codeFile = new File(dirBase, market + "_CodeTable.txt");
 		Writer out = null;
@@ -98,6 +106,12 @@ public class Wddl {
 			for (Code code : codes) {
 				if (nIndex++ > m_nMaxOutputCount)
 					break;
+
+				if (code.getType() >= 0x20)
+					continue;
+
+				codeList.add(code);
+
 				StringBuffer sb = new StringBuffer();
 				sb.append(code.getWindCode()) //
 						.append(" ").append(code.getCode())//
@@ -126,14 +140,15 @@ public class Wddl {
 
 	}
 
-	void test_getKLine() {
+	void getKLine(String code, int date) {
 		ReqKLine req = new ReqKLine();
 
-		req.setCode(m_testCode);
-		req.setCycType(CYCTYPE.CYC_MINUTE);
-		req.setCycDef(60);
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
+		req.setCode(code);
+		req.setCycType(CYCTYPE.CYC_DAY);
+		req.setCycDef(1); //60
+		req.setCQFlag(REFILLFLAG.REFILL_BACKWARD);
+		req.setBeginDate(date);
+		req.setEndDate(date);
 
 		KLine[] kline = client.getKLine(req);
 		if (kline == null) {
@@ -141,14 +156,53 @@ public class Wddl {
 			return;
 		}
 		System.out.println("Success to call getKline(?) " + kline.length);
-		int nIndex = 0;
-		for (KLine k : kline) {
-			if (nIndex++ > m_nMaxOutputCount)
-				break;
-			StringBuilder sb = new StringBuilder();
-			sb.append(k.getWindCode()).append(" ").append(k.getCode()).append(" ").append(k.getDate()).append(" ").append(k.getTime()).append(" ").append(k.getOpen()).append(" ").append(k.getHigh()).append(" ").append(k.getLow()).append(" ").append(k.getClose()).append(" ").append(k.getVolume()).append(" ").append(k.getTurover()).append(" ").append(k.getItems()).append(" ").append(k.getInterest());
-			System.out.println(sb.toString());
+
+		BufferedWriter out = null;
+		try {
+			File dir = new File(dirDate, "KLine");
+			dir.mkdir();
+
+			File dataFile = new File(dir, code + ".txt");
+
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
+
+			int nIndex = 0;
+			for (KLine k : kline) {
+				if (nIndex++ > m_nMaxOutputCount)
+					break;
+				StringBuilder sb = new StringBuilder();
+				sb.append(k.getWindCode()).append(" ")//
+						.append(k.getCode())//
+						.append(" ").append(k.getDate())//
+						.append(" ").append(k.getTime())//
+						.append(" ").append(k.getOpen())//
+						.append(" ").append(k.getHigh())//
+						.append(" ").append(k.getLow())//
+						.append(" ").append(k.getClose())//
+						.append(" ").append(k.getVolume())//
+						.append(" ").append(k.getTurover())//
+						.append(" ").append(k.getItems())//
+						.append(" ").append(k.getInterest());
+				String line = sb.toString();
+				//System.out.println(line);
+
+				out.write(line + "\n");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally
+
+		{
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
 
 	void test_getTick() {
@@ -171,13 +225,18 @@ public class Wddl {
 			if (nIndex++ > m_nMaxOutputCount)
 				break;
 			StringBuilder sb = new StringBuilder();
-			sb.append(k.getWindCode()).append(" ").append(k.getCode()).append(" ").append(k.getDate()).append(" ").append(k.getTime()).append(" ").append(k.getOpen()).append(" ").append(k.getHigh()).append(" ").append(k.getLow()).append(" ").append(k.getPreClose()).append(" ").append(k.getVolume()).append(" ").append(k.getTurover()).append(" ").append(k.getItems()).append(" ").append(k.getInterest()).append(" ").append(k.getPrice()).append(" ").append(k.getTradeFlag()).append(" ").append(k.getBSFlag()).append(" ").append(k.getAccVolume()).append(" ").append(k.getAccTurover()).append(" ");
+			sb.append(k.getWindCode()).append(" ").append(k.getCode()).append(" ").append(k.getDate()).append(" ").append(k.getTime())//
+					.append(" ").append(k.getOpen()).append(" ").append(k.getHigh()).append(" ").append(k.getLow()) //
+					.append(" ").append(k.getPreClose()).append(" ").append(k.getVolume()).append(" ").append(k.getTurover()) //
+					.append(" ").append(k.getItems()).append(" ").append(k.getInterest()).append(" ").append(k.getPrice()).append(" ")//
+					.append(k.getTradeFlag()).append(" ").append(k.getBSFlag()).append(" ").append(k.getAccVolume()).append(" ")//
+					.append(k.getAccTurover()).append(" ");
 
 			System.out.println(sb.toString());
 		}
 	}
 
-	void test_getTickAB() {
+	void getTickAB(String code, int date) {
 		ReqTick req = new ReqTick();
 		req.setCode(m_testCode);
 		req.setBeginDate(m_testBeginDate);
@@ -192,12 +251,68 @@ public class Wddl {
 			return;
 		}
 		System.out.println("Success to call getTickAB(?) " + tick.length);
-		for (int i = 0; i < tick.length && i < m_nMaxOutputCount; ++i) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(tick[i].getCode()).append(" ").append(tick[i].getAccTurover()).append(" ").append(tick[i].getHigh()).append(" ").append(tick[i].getLow()).append(" ").append(tick[i].getOpen()).append(" ").append(tick[i].getPreClose()).append(" ").append(arrayToStr(tick[i].getAskPrice())).append(" ").append(arrayToStr(tick[i].getAskVolume())).append(" ").append(arrayToStr(tick[i].getBidPrice())).append(" ").append(arrayToStr(tick[i].getBidVolume())).append(" ").append(tick[i].getAskAvPrice()).append(" ").append(tick[i].getBidAvPrice()).append(" ").append(tick[i].getTotalAskVolume()).append(" ").append(tick[i].getStocks()).append(" ").append(tick[i].getUps()).append(" ").append(tick[i].getIndex()).append(" ").append(tick[i].getDowns()).append(" ").append(tick[i].getHoldLines())
-					.append(" ");
 
-			System.out.println(sb.toString());
+		BufferedWriter out = null;
+		try {
+			File dir = new File(dirDate, "TickAB");
+			dir.mkdir();
+
+			File dataFile = new File(dir, code + ".txt");
+
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
+			int nIndex = 0;
+			for (TickAB k : tick) {
+				if (nIndex++ > m_nMaxOutputCount)
+					break;
+
+				StringBuilder sb = new StringBuilder();
+				sb.append(k.getWindCode())//
+						.append(" ").append(k.getCode())//
+						.append(" ").append(k.getDate())//
+						.append(" ").append(k.getTime()) //
+						.append(" ").append(k.getPrice()) //
+						.append(" ").append(k.getVolume()) //
+						.append(" ").append(k.getTurover()) //
+						.append(" ").append(k.getItems()) //
+						.append(" ").append(k.getInterest()) //
+						.append(" ").append(k.getTradeFlag()) //
+						.append(" ").append(k.getBSFlag()) //
+						.append(" ").append(k.getAccVolume())//
+						.append(" ").append(k.getAccTurover())//
+						.append(" ").append(k.getHigh())//
+						.append(" ").append(k.getLow())//
+						.append(" ").append(k.getOpen())//
+						.append(" ").append(k.getPreClose())//
+						.append(" ").append(arrayToStr(k.getAskPrice()))//
+						.append(" ").append(arrayToStr(k.getAskVolume()))//
+						.append(" ").append(arrayToStr(k.getBidPrice()))//
+						.append(" ").append(arrayToStr(k.getBidVolume()))//
+						.append(" ").append(k.getAskAvPrice())//
+						.append(" ").append(k.getBidAvPrice())//
+						.append(" ").append(k.getTotalAskVolume())//
+						.append(" ").append(k.getTotalBidVolume())//
+						.append(" ").append(k.getIndex())//
+						.append(" ").append(k.getStocks())//
+						.append(" ").append(k.getUps())//
+						.append(" ").append(k.getDowns())//
+						.append(" ").append(k.getHoldLines());
+
+				String line = sb.toString();
+				//System.out.println(line);
+
+				out.write(line + "\n");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -273,12 +388,12 @@ public class Wddl {
 
 	}
 
-	void getTransaction(String windCode) {
+	void getTransaction(String windCode, int date) {
 		ReqTransaction req = new ReqTransaction();
 
 		req.setCode(windCode);
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
+		req.setBeginDate(date);
+		req.setEndDate(date);
 		req.setBeginTime(m_testBeginTime);
 		req.setEndTime(m_testEndTime);
 
@@ -292,6 +407,11 @@ public class Wddl {
 
 		BufferedWriter out = null;
 		try {
+			File dir = new File(dirDate, "Transaction");
+			dir.mkdir();
+
+			File dataFile = new File(dir, windCode + ".txt");
+
 			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
 
 			for (int i = 0; i < objs.length; ++i) {//&& i < m_nMaxOutputCount
@@ -312,7 +432,7 @@ public class Wddl {
 						.append(" ").append(trans.getBidOrder());
 
 				String line = sb.toString();
-				System.out.println(line);
+				//System.out.println(line);
 
 				out.write(line + "\n");
 			}
@@ -330,12 +450,15 @@ public class Wddl {
 		}
 	}
 
-	void test_getOrder() {
+	void getOrder(String code, int date) {
+		if (!code.endsWith(".SZ"))
+			return;
+
 		ReqTransaction req = new ReqTransaction();
 
-		req.setCode(m_testCode);
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
+		req.setCode(code);
+		req.setBeginDate(date);
+		req.setEndDate(date);
 		req.setBeginTime(m_testBeginTime);
 		req.setEndTime(m_testEndTime);
 
@@ -346,31 +469,56 @@ public class Wddl {
 			return;
 		}
 		System.out.println("Success to call getOrder(?) " + objs.length);
-		for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
-			StringBuilder sb = new StringBuilder();
 
-			sb.append(objs[i].getWindCode()) //
-					.append(" ").append(objs[i].getCode()) //
-					.append(" ").append(objs[i].getDate())//
-					.append(" ").append(objs[i].getTime())//
-					.append(" ").append(objs[i].getIndex())//
-					.append(" ").append(objs[i].getFunctionCode())//
-					.append(" ").append(objs[i].getOrderKind())//
-					.append(" ").append(objs[i].getOrder())//
-					.append(" ").append(objs[i].getOrderPrice())//
-					.append(" ").append(objs[i].getOrderVolume())//
-					.append(" ");
+		BufferedWriter out = null;
+		try {
+			File dir = new File(dirDate, "Order");
+			dir.mkdir();
 
-			System.out.println(sb.toString());
+			File dataFile = new File(dir, code + ".txt");
+
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
+
+			for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
+				StringBuilder sb = new StringBuilder();
+
+				sb.append(objs[i].getWindCode()) //
+						.append(" ").append(objs[i].getCode()) //
+						.append(" ").append(objs[i].getDate())//
+						.append(" ").append(objs[i].getTime())//
+						.append(" ").append(objs[i].getIndex())//
+						.append(" ").append(objs[i].getOrder())//
+						.append(" ").append(objs[i].getOrderKind())//
+						.append(" ").append(objs[i].getFunctionCode())//
+						.append(" ").append(objs[i].getOrderPrice())//
+						.append(" ").append(objs[i].getOrderVolume());
+
+				String line = sb.toString();
+				//System.out.println(line);
+				out.write(line + "\n");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 		}
+
 	}
 
-	void test_getOrderQueue() {
+	void getOrderQueue(String code, int date) {
 		ReqTransaction req = new ReqTransaction();
 
-		req.setCode(m_testCode);
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
+		req.setCode(code);
+		req.setBeginDate(date);
+		req.setEndDate(date);
 		req.setBeginTime(m_testBeginTime);
 		req.setEndTime(m_testEndTime);
 
@@ -381,55 +529,142 @@ public class Wddl {
 			return;
 		}
 		System.out.println("Success to call getOrderQueue(?) " + objs.length);
-		for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
-			StringBuilder sb = new StringBuilder();
 
-			sb.append(objs[i].getCode()).append(" ").append(objs[i].getWindCode()).append(" ").append(objs[i].getDate()).append(" ").append(objs[i].getTime()).append(" ").append(objs[i].getSide()).append(" ").append(objs[i].getPrice()).append(" ").append(objs[i].getOrderItems()).append(" ").append(objs[i].getABItems()).append(" ");
+		BufferedWriter out = null;
 
-			System.out.println(sb.toString());
+		try {
+			File dir = new File(dirDate, "OrderQueue");
+			dir.mkdir();
+
+			File dataFile = new File(dir, code + ".txt");
+
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataFile)));
+
+			for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
+				StringBuilder sb = new StringBuilder();
+
+				sb.append(objs[i].getWindCode())//
+						.append(" ").append(objs[i].getCode())//
+						.append(" ").append(objs[i].getDate())//
+						.append(" ").append(objs[i].getTime())//
+						.append(" ").append(objs[i].getSide())//
+						.append(" ").append(objs[i].getPrice())//
+						.append(" ").append(objs[i].getOrderItems())//
+						.append(" ").append(objs[i].getABItems())//
+						.append(" ").append(arrayToStr(objs[i].getABVolume()));
+
+				String line = sb.toString();
+				//System.out.println(line);
+				out.write(line + "\n");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
 	void run() {
-		dirBase = new File("/usr/wddl");
+		initBaseDir();
 
-		getCodeTables("SZ");
+		//getCodeTables("SZ");
 		getCodeTables("SH");
 
-		if (!dirBase.exists()) {
-			if (dir.mkdir()) {
-				System.out.println("创建数据根目录成功");
-			} else {
-				System.out.println("创建数据根目录失败.....");
+		String date = "20151119";
+		int dateAsInt = Integer.parseInt(date);
+		initDateDir(date);
+
+		long startTime = System.currentTimeMillis();
+
+		for (Code code : codeList) {
+			String windCode = code.getWindCode();
+			if ("600309.SH".equals(windCode)) {
+				processCode(code, dateAsInt);
 			}
 		}
 
-		if (!dir.exists()) {
-			if (dir.mkdir()) {
+		logDayJob(date, startTime);
+	}
+
+	private void processCode(Code code, int date) {
+		try {
+			//			File dataFile = new File(dir, code.getCode() + ".txt");
+			//
+			//			dataFile.createNewFile();
+			String windCode = code.getWindCode();
+
+			getKLine(windCode, date);
+
+			//		test_getTick();
+			try {
+				getTickAB(windCode, date);
+			} catch (Exception ex) {
+				System.out.println("Fail to call getTickAB(?). Exception: " + ex.getMessage());
+			}
+			//
+			//		test_getFuture();
+			//		test_getFutureAB();
+			//		test_getCodeInfo();
+
+			getTransaction(windCode, date);
+			getOrder(windCode, date);
+			getOrderQueue(windCode, date);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void initDateDir(String date) {
+		dirDate = new File("/usr/wddl/" + date);
+
+		if (!dirDate.exists()) {
+			if (dirDate.mkdir()) {
 				System.out.println("创建日期目录成功");
 			} else {
 				System.out.println("创建日期目录失败.....");
 			}
 		}
+	}
 
-		dir = new File("/usr/wddl/" + "20151119");
-		for (Code code : codes) {
-			dataFile = new File(dir, code.getCode() + ".txt");
+	private void initBaseDir() {
+		dirBase = new File("/usr/wddl");
 
-			//		test_getKLine();
-			//		test_getTick();
-			//		try {
-			//			test_getTickAB();
-			//		} catch (Exception ex) {
-			//			System.out.println("Fail to call getTickAB(?). Exception: " + ex.getMessage());
-			//		}
-			//
-			//		test_getFuture();
-			//		test_getFutureAB();
-			//		test_getCodeInfo();
-			getTransaction(code.getWindCode());
-			//		test_getOrder();
-			//		test_getOrderQueue();
+		if (!dirBase.exists()) {
+			if (dirDate.mkdir()) {
+				System.out.println("创建数据根目录成功");
+			} else {
+				System.out.println("创建数据根目录失败.....");
+			}
+		}
+	}
+
+	public void logDayJob(String date, long startTime) {
+		File codeFile = new File(dirBase, "log.txt");
+		Writer out = null;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(codeFile, true)));
+
+			long endTime = System.currentTimeMillis();
+			out.write(date + " " + dateFormat.format(new Date(startTime)) + " " // 
+					+ dateFormat.format(new Date(endTime)) + " " + (endTime - startTime) + "\n");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -441,10 +676,10 @@ public class Wddl {
 
 		Wddl d = new Wddl(args[0], Integer.parseInt(args[1]), args[2], args[3]);
 
-		System.out.println("*******************************begin test****************************");
+		System.out.println("*******************************begin download****************************");
 
 		d.run();
 
-		System.out.println("*******************************end test****************************");
+		System.out.println("*******************************end download****************************");
 	}
 }
