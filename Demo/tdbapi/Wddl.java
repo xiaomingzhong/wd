@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.joda.time.DateTime;
+
 import cn.com.wind.td.tdb.CYCTYPE;
 import cn.com.wind.td.tdb.Code;
 import cn.com.wind.td.tdb.Future;
@@ -32,6 +35,7 @@ import cn.com.wind.td.tdb.Transaction;
 
 public class Wddl {
 	public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+	public static SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
 
 	TDBClient client = new TDBClient();
 
@@ -61,12 +65,15 @@ public class Wddl {
 	int m_testBeginTime = 0;
 	int m_testEndTime = -1;
 
+	int fromTaskLine = 0;
+
 	int m_nMaxOutputCount = Integer.MAX_VALUE;
 	private File dirDate, dirBase;
 	//private File dataFile;
 	//private Code[] codes;
 
 	private List<Code> codeList = new ArrayList<>();
+	private List allTasks;
 
 	Wddl(String ip, int port, String username, String password) {
 		OPEN_SETTINGS setting = new OPEN_SETTINGS();
@@ -575,23 +582,27 @@ public class Wddl {
 	void run() {
 		initBaseDir();
 
-		//getCodeTables("SZ");
 		getCodeTables("SH");
+		getCodeTables("SZ");
 
-		String date = "20151119";
-		int dateAsInt = Integer.parseInt(date);
-		initDateDir(date);
+		initAllTasks();
 
-		long startTime = System.currentTimeMillis();
+		//initDlTask();
 
-		for (Code code : codeList) {
-			String windCode = code.getWindCode();
-			//if ("600309.SH".equals(windCode)) {
-			processCode(code, dateAsInt);
-			//}
-		}
-
-		logDayJob(date, startTime);
+		//		String date = "20151119";
+		//		int dateAsInt = Integer.parseInt(date);
+		//		initDateDir(date);
+		//
+		//		long startTime = System.currentTimeMillis();
+		//
+		//		for (Code code : codeList) {
+		//			String windCode = code.getWindCode();
+		//			//if ("600309.SH".equals(windCode)) {
+		//			processCode(code, dateAsInt);
+		//			//}
+		//		}
+		//
+		//		logDayJob(date, startTime);
 	}
 
 	private void processCode(Code code, int date) {
@@ -665,6 +676,36 @@ public class Wddl {
 		}
 	}
 
+	public void initAllTasks() {
+		File codeFile = new File(dirBase, "dltasks.txt");
+		Writer out = null;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(codeFile, true)));
+
+			DateTime startDate = new DateTime(2013, 1, 1, 0, 0);
+			DateTime endDate = new DateTime(2015, 11, 20, 0, 0);
+
+			DateTime jobDate = startDate;
+			while (jobDate.isBefore(endDate)) {
+				for (Code code : codeList) {
+					out.write(dayFormat.format(jobDate.toDate()) + " " + code.getWindCode() + "\n");
+				}
+
+				jobDate = jobDate.plusDays(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (out != null) {
+					out.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public void logDayJob(String date, long startTime) {
 		File codeFile = new File(dirBase, "log.txt");
 		Writer out = null;
@@ -684,6 +725,43 @@ public class Wddl {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	public void initDlTask() {
+		try {
+			allTasks = FileUtils.readLines(new File(dirBase, "dltasks.txt"));
+
+			File taskLogFile = new File(dirBase, "tasklog.txt");
+
+			if (!taskLogFile.exists())
+				return;
+
+			String log = FileUtils.readFileToString(taskLogFile);
+
+			if (log == null || log.isEmpty())
+				return;
+
+			String[] parts = log.split("");
+			fromTaskLine = Integer.parseInt(parts[0]);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+
+		}
+	}
+
+	public void logDlTask(String code, String date, long startTime) {
+		File taskLogFile = new File(dirBase, "tasklog.txt");
+
+		try {
+			long endTime = System.currentTimeMillis();
+			FileUtils.writeStringToFile(taskLogFile, (fromTaskLine + 1) + " " + date + " " + code + " " + dateFormat.format(new Date(endTime)) + " " + (endTime - startTime) + "\n");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+
 		}
 	}
 
