@@ -586,9 +586,9 @@ public class Wddl {
 
 		for (Code code : codeList) {
 			String windCode = code.getWindCode();
-			if ("600309.SH".equals(windCode)) {
-				processCode(code, dateAsInt);
-			}
+			//if ("600309.SH".equals(windCode)) {
+			processCode(code, dateAsInt);
+			//}
 		}
 
 		logDayJob(date, startTime);
@@ -596,12 +596,17 @@ public class Wddl {
 
 	private void processCode(Code code, int date) {
 		try {
+			System.out.println("Processing code: " + code.getWindCode());
 			//			File dataFile = new File(dir, code.getCode() + ".txt");
 			//
 			//			dataFile.createNewFile();
 			String windCode = code.getWindCode();
 
-			getKLine(windCode, date);
+			try {
+				getKLine(windCode, date);
+			} catch (Exception ex) {
+				System.out.println("Fail to call getKLine(?). Exception: " + ex.getMessage());
+			}
 
 			//		test_getTick();
 			try {
@@ -614,9 +619,23 @@ public class Wddl {
 			//		test_getFutureAB();
 			//		test_getCodeInfo();
 
-			getTransaction(windCode, date);
-			getOrder(windCode, date);
-			getOrderQueue(windCode, date);
+			try {
+				getTransaction(windCode, date);
+			} catch (Exception ex) {
+				System.out.println("Fail to call getTransaction(?). Exception: " + ex.getMessage());
+			}
+
+			try {
+				getOrder(windCode, date);
+			} catch (Exception ex) {
+				System.out.println("Fail to call getOrder(?). Exception: " + ex.getMessage());
+			}
+
+			try {
+				getOrderQueue(windCode, date);
+			} catch (Exception ex) {
+				System.out.println("Fail to call getOrderQueue(?). Exception: " + ex.getMessage());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
