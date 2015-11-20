@@ -36,6 +36,7 @@ import cn.com.wind.td.tdb.Transaction;
 public class Wddl {
 	public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 	public static SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
+	public static String SHI = "000001.SZ"; //"000001.SH";
 
 	TDBClient client = new TDBClient();
 
@@ -65,7 +66,7 @@ public class Wddl {
 	int m_testBeginTime = 0;
 	int m_testEndTime = -1;
 
-	int fromTaskLine = 0;
+	int nextTaskLine = 0;
 
 	int m_nMaxOutputCount = Integer.MAX_VALUE;
 	private File dirDate, dirBase;
@@ -73,7 +74,7 @@ public class Wddl {
 	//private Code[] codes;
 
 	private List<Code> codeList = new ArrayList<>();
-	private List allTasks;
+	private List<String> allTasks;
 
 	Wddl(String ip, int port, String username, String password) {
 		OPEN_SETTINGS setting = new OPEN_SETTINGS();
@@ -147,7 +148,7 @@ public class Wddl {
 
 	}
 
-	void getKLine(String code, int date) {
+	boolean getKLine(String code, int date) {
 		ReqKLine req = new ReqKLine();
 
 		req.setCode(code);
@@ -159,9 +160,10 @@ public class Wddl {
 
 		KLine[] kline = client.getKLine(req);
 		if (kline == null) {
-			System.out.println("getKline failed!");
-			return;
+			System.out.println("getKline failed: " + date + " " + code);
+			return false;
 		}
+
 		System.out.println("Success to call getKline(?) " + kline.length);
 
 		BufferedWriter out = null;
@@ -198,9 +200,7 @@ public class Wddl {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally
-
-		{
+		} finally {
 			try {
 				if (out != null) {
 					out.close();
@@ -210,6 +210,7 @@ public class Wddl {
 			}
 		}
 
+		return true;
 	}
 
 	void test_getTick() {
@@ -585,9 +586,13 @@ public class Wddl {
 		getCodeTables("SH");
 		getCodeTables("SZ");
 
-		initAllTasks();
+		initTaskList();
 
-		//initDlTask();
+		initCurrentTask();
+
+		for (int i = 0; i < 10; i++) {
+			nextTask();
+		}
 
 		//		String date = "20151119";
 		//		int dateAsInt = Integer.parseInt(date);
@@ -605,13 +610,27 @@ public class Wddl {
 		//		logDayJob(date, startTime);
 	}
 
-	private void processCode(Code code, int date) {
+	private void nextTask() {
+		String taskLine = allTasks.get(nextTaskLine);
+		String[] taskTokens = taskLine.split(" ");
+		if ("H".equals(taskTokens[0])) {
+			nextTaskLine++;
+			return;
+		}
+
+		long startTime = System.currentTimeMillis();
+		processCode(taskTokens[2], Integer.parseInt(taskTokens[1]));
+
+		nextTaskLine++;
+		logDlTask(taskTokens[2], taskTokens[1], nextTaskLine, startTime);
+	}
+
+	private void processCode(String windCode, int date) {
 		try {
-			System.out.println("Processing code: " + code.getWindCode());
+			System.out.println("---------- Processing download task: " + date + " " + windCode + " ----------");
 			//			File dataFile = new File(dir, code.getCode() + ".txt");
 			//
 			//			dataFile.createNewFile();
-			String windCode = code.getWindCode();
 
 			try {
 				getKLine(windCode, date);
@@ -676,19 +695,31 @@ public class Wddl {
 		}
 	}
 
-	public void initAllTasks() {
-		File codeFile = new File(dirBase, "dltasks.txt");
+	public void initTaskList() {
+		File tasksFile = new File(dirBase, "tasklist.txt");
+		if (tasksFile.exists())
+			return;
+
 		Writer out = null;
 		try {
-			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(codeFile, true)));
+			out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tasksFile)));
 
-			DateTime startDate = new DateTime(2013, 1, 1, 0, 0);
+			DateTime startDate = new DateTime(2015, 1, 1, 0, 0);
 			DateTime endDate = new DateTime(2015, 11, 20, 0, 0);
 
 			DateTime jobDate = startDate;
 			while (jobDate.isBefore(endDate)) {
+				String jobDateAsText = dayFormat.format(jobDate.toDate());
+				initDateDir(jobDateAsText);
+
+				if (!getKLine(SHI, Integer.parseInt(jobDateAsText))) {
+					out.write("H " + jobDateAsText + "\n");
+					jobDate = jobDate.plusDays(1);
+					continue;
+				}
+
 				for (Code code : codeList) {
-					out.write(dayFormat.format(jobDate.toDate()) + " " + code.getWindCode() + "\n");
+					out.write("T " + jobDateAsText + " " + code.getWindCode() + "\n");
 				}
 
 				jobDate = jobDate.plusDays(1);
@@ -728,9 +759,9 @@ public class Wddl {
 		}
 	}
 
-	public void initDlTask() {
+	public void initCurrentTask() {
 		try {
-			allTasks = FileUtils.readLines(new File(dirBase, "dltasks.txt"));
+			allTasks = FileUtils.readLines(new File(dirBase, "tasklist.txt"));
 
 			File taskLogFile = new File(dirBase, "tasklog.txt");
 
@@ -743,7 +774,7 @@ public class Wddl {
 				return;
 
 			String[] parts = log.split("");
-			fromTaskLine = Integer.parseInt(parts[0]);
+			nextTaskLine = Integer.parseInt(parts[0]);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -752,12 +783,12 @@ public class Wddl {
 		}
 	}
 
-	public void logDlTask(String code, String date, long startTime) {
+	public void logDlTask(String windCode, String date, int nextTaskLine, long startTime) {
 		File taskLogFile = new File(dirBase, "tasklog.txt");
 
 		try {
 			long endTime = System.currentTimeMillis();
-			FileUtils.writeStringToFile(taskLogFile, (fromTaskLine + 1) + " " + date + " " + code + " " + dateFormat.format(new Date(endTime)) + " " + (endTime - startTime) + "\n");
+			FileUtils.writeStringToFile(taskLogFile, nextTaskLine + " " + date + " " + windCode + " " + dateFormat.format(new Date(endTime)) + " " + (endTime - startTime) + "\n");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
