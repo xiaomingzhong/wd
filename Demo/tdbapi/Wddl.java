@@ -787,7 +787,7 @@ public class Wddl {
 			if (log == null || log.isEmpty())
 				return;
 
-			String[] parts = log.split("");
+			String[] parts = log.split(" ");
 			nextTaskLine = Integer.parseInt(parts[0]);
 
 		} catch (Exception e) {
