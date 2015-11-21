@@ -592,6 +592,9 @@ public class Wddl {
 
 		//for (int i = 0; i < 10; i++) {
 		for (;;) {
+			if (nextTaskLine >= allTasks.size())
+				break;
+
 			nextTask();
 		}
 
