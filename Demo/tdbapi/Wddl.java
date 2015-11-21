@@ -590,7 +590,8 @@ public class Wddl {
 
 		initCurrentTask();
 
-		for (int i = 0; i < 10; i++) {
+		//for (int i = 0; i < 10; i++) {
+		for (;;) {
 			nextTask();
 		}
 
