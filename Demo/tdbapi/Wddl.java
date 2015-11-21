@@ -60,9 +60,9 @@ public class Wddl {
 		return sb.toString();
 	}
 
-	String m_testCode = "600309.SH";
-	int m_testBeginDate = 20151119;
-	int m_testEndDate = 20151119;
+	//String m_testCode = "600309.SH";
+	//int m_testBeginDate = 20151119;
+	//int m_testEndDate = 20151119;
 	int m_testBeginTime = 0;
 	int m_testEndTime = -1;
 
@@ -213,42 +213,42 @@ public class Wddl {
 		return true;
 	}
 
-	void test_getTick() {
-		ReqTick req = new ReqTick();
-
-		req.setCode(m_testCode);
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
-		req.setBeginTime(m_testBeginTime);
-		req.setEndTime(m_testEndTime);
-
-		Tick[] tick = client.getTick(req);
-		if (tick == null) {
-			System.out.println("getTick failed!");
-			return;
-		}
-		System.out.println("Success to call getTick(?) " + tick.length);
-		int nIndex = 0;
-		for (Tick k : tick) {
-			if (nIndex++ > m_nMaxOutputCount)
-				break;
-			StringBuilder sb = new StringBuilder();
-			sb.append(k.getWindCode()).append(" ").append(k.getCode()).append(" ").append(k.getDate()).append(" ").append(k.getTime())//
-					.append(" ").append(k.getOpen()).append(" ").append(k.getHigh()).append(" ").append(k.getLow()) //
-					.append(" ").append(k.getPreClose()).append(" ").append(k.getVolume()).append(" ").append(k.getTurover()) //
-					.append(" ").append(k.getItems()).append(" ").append(k.getInterest()).append(" ").append(k.getPrice()).append(" ")//
-					.append(k.getTradeFlag()).append(" ").append(k.getBSFlag()).append(" ").append(k.getAccVolume()).append(" ")//
-					.append(k.getAccTurover()).append(" ");
-
-			System.out.println(sb.toString());
-		}
-	}
+	//	void test_getTick() {
+	//		ReqTick req = new ReqTick();
+	//
+	//		req.setCode(m_testCode);
+	//		req.setBeginDate(m_testBeginDate);
+	//		req.setEndDate(m_testEndDate);
+	//		req.setBeginTime(m_testBeginTime);
+	//		req.setEndTime(m_testEndTime);
+	//
+	//		Tick[] tick = client.getTick(req);
+	//		if (tick == null) {
+	//			System.out.println("getTick failed!");
+	//			return;
+	//		}
+	//		System.out.println("Success to call getTick(?) " + tick.length);
+	//		int nIndex = 0;
+	//		for (Tick k : tick) {
+	//			if (nIndex++ > m_nMaxOutputCount)
+	//				break;
+	//			StringBuilder sb = new StringBuilder();
+	//			sb.append(k.getWindCode()).append(" ").append(k.getCode()).append(" ").append(k.getDate()).append(" ").append(k.getTime())//
+	//					.append(" ").append(k.getOpen()).append(" ").append(k.getHigh()).append(" ").append(k.getLow()) //
+	//					.append(" ").append(k.getPreClose()).append(" ").append(k.getVolume()).append(" ").append(k.getTurover()) //
+	//					.append(" ").append(k.getItems()).append(" ").append(k.getInterest()).append(" ").append(k.getPrice()).append(" ")//
+	//					.append(k.getTradeFlag()).append(" ").append(k.getBSFlag()).append(" ").append(k.getAccVolume()).append(" ")//
+	//					.append(k.getAccTurover()).append(" ");
+	//
+	//			System.out.println(sb.toString());
+	//		}
+	//	}
 
 	void getTickAB(String code, int date) {
 		ReqTick req = new ReqTick();
-		req.setCode(m_testCode);
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
+		req.setCode(code);
+		req.setBeginDate(date);
+		req.setEndDate(date);
 		req.setBeginTime(m_testBeginTime);
 		req.setEndTime(m_testEndTime);
 
@@ -324,77 +324,77 @@ public class Wddl {
 		}
 	}
 
-	void test_getFuture() {
-		ReqFuture req = new ReqFuture();
+	//	void test_getFuture() {
+	//		ReqFuture req = new ReqFuture();
+	//
+	//		req.setCode("IF1404.CF");
+	//		req.setBeginDate(m_testBeginDate);
+	//		req.setEndDate(m_testEndDate);
+	//		req.setBeginTime(m_testBeginTime);
+	//		req.setEndTime(m_testEndTime);
+	//		req.setAutoComplete(1);
+	//
+	//		Future[] objs = client.getFuture(req);
+	//
+	//		if (objs != null) {
+	//			System.out.println("Success to call getFuture(?) " + objs.length);
+	//			for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
+	//				StringBuilder sb = new StringBuilder();
+	//
+	//				sb.append(objs[i].getCode()).append(" ").append(objs[i].getWindCode()).append(" ").append(objs[i].getDate()).append(" ").append(objs[i].getTime()).append(" ").append(objs[i].getVolume()).append(" ").append(objs[i].getTurover()).append(" ").append(objs[i].getSettle()).append(" ").append(objs[i].getPosition()).append(" ").append(objs[i].getCurDelta()).append(" ").append(objs[i].getTradeFlag()).append(" ").append(objs[i].getAccVolume()).append(" ").append(objs[i].getAccTurover()).append(" ").append(objs[i].getHigh()).append(" ").append(objs[i].getLow()).append(" ").append(objs[i].getOpen()).append(" ").append(objs[i].getPrice()).append(" ").append(objs[i].getPreClose()).append(" ").append(objs[i].getPrePosition()).append(" ").append(objs[i].getPreSettle()).append(" ");
+	//
+	//				System.out.println(sb.toString());
+	//			}
+	//		} else {
+	//			System.out.print("Fail to call getFuture(?)\n");
+	//		}
+	//	}
 
-		req.setCode("IF1404.CF");
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
-		req.setBeginTime(m_testBeginTime);
-		req.setEndTime(m_testEndTime);
-		req.setAutoComplete(1);
+	//	void test_getFutureAB() {
+	//		ReqFuture req = new ReqFuture();
+	//
+	//		req.setCode("IF1404.CF");
+	//		req.setBeginDate(m_testBeginDate);
+	//		req.setEndDate(m_testEndDate);
+	//		req.setBeginTime(m_testBeginTime);
+	//		req.setEndTime(m_testEndTime);
+	//		req.setAutoComplete(1);
+	//
+	//		FutureAB[] objs = client.getFutureAB(req);
+	//
+	//		if (objs == null) {
+	//			System.out.print("Fail to call getFutureAB(?)\n");
+	//			return;
+	//		}
+	//
+	//		System.out.println("Success to call getFutureAB(?) " + objs.length);
+	//
+	//		for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
+	//			StringBuilder sb = new StringBuilder();
+	//
+	//			sb.append(objs[i].getCode()).append(" ").append(objs[i].getWindCode()).append(" ").append(objs[i].getDate()).append(" ").append(objs[i].getTime()).append(" ").append(objs[i].getVolume()).append(" ").append(objs[i].getTurover()).append(" ").append(objs[i].getSettle()).append(" ").append(objs[i].getPosition()).append(" ").append(objs[i].getCurDelta()).append(" ").append(objs[i].getTradeFlag()).append(" ").append(objs[i].getAccVolume()).append(" ").append(objs[i].getAccTurover()).append(" ").append(objs[i].getHigh()).append(" ").append(objs[i].getLow()).append(" ").append(objs[i].getOpen()).append(" ").append(objs[i].getPrice()).append(" ").append(objs[i].getPreClose()).append(" ").append(objs[i].getPrePosition()).append(" ").append(objs[i].getPreSettle()).append(" ");
+	//
+	//			System.out.println(sb.toString());
+	//		}
+	//	}
 
-		Future[] objs = client.getFuture(req);
-
-		if (objs != null) {
-			System.out.println("Success to call getFuture(?) " + objs.length);
-			for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
-				StringBuilder sb = new StringBuilder();
-
-				sb.append(objs[i].getCode()).append(" ").append(objs[i].getWindCode()).append(" ").append(objs[i].getDate()).append(" ").append(objs[i].getTime()).append(" ").append(objs[i].getVolume()).append(" ").append(objs[i].getTurover()).append(" ").append(objs[i].getSettle()).append(" ").append(objs[i].getPosition()).append(" ").append(objs[i].getCurDelta()).append(" ").append(objs[i].getTradeFlag()).append(" ").append(objs[i].getAccVolume()).append(" ").append(objs[i].getAccTurover()).append(" ").append(objs[i].getHigh()).append(" ").append(objs[i].getLow()).append(" ").append(objs[i].getOpen()).append(" ").append(objs[i].getPrice()).append(" ").append(objs[i].getPreClose()).append(" ").append(objs[i].getPrePosition()).append(" ").append(objs[i].getPreSettle()).append(" ");
-
-				System.out.println(sb.toString());
-			}
-		} else {
-			System.out.print("Fail to call getFuture(?)\n");
-		}
-	}
-
-	void test_getFutureAB() {
-		ReqFuture req = new ReqFuture();
-
-		req.setCode("IF1404.CF");
-		req.setBeginDate(m_testBeginDate);
-		req.setEndDate(m_testEndDate);
-		req.setBeginTime(m_testBeginTime);
-		req.setEndTime(m_testEndTime);
-		req.setAutoComplete(1);
-
-		FutureAB[] objs = client.getFutureAB(req);
-
-		if (objs == null) {
-			System.out.print("Fail to call getFutureAB(?)\n");
-			return;
-		}
-
-		System.out.println("Success to call getFutureAB(?) " + objs.length);
-
-		for (int i = 0; i < objs.length && i < m_nMaxOutputCount; ++i) {
-			StringBuilder sb = new StringBuilder();
-
-			sb.append(objs[i].getCode()).append(" ").append(objs[i].getWindCode()).append(" ").append(objs[i].getDate()).append(" ").append(objs[i].getTime()).append(" ").append(objs[i].getVolume()).append(" ").append(objs[i].getTurover()).append(" ").append(objs[i].getSettle()).append(" ").append(objs[i].getPosition()).append(" ").append(objs[i].getCurDelta()).append(" ").append(objs[i].getTradeFlag()).append(" ").append(objs[i].getAccVolume()).append(" ").append(objs[i].getAccTurover()).append(" ").append(objs[i].getHigh()).append(" ").append(objs[i].getLow()).append(" ").append(objs[i].getOpen()).append(" ").append(objs[i].getPrice()).append(" ").append(objs[i].getPreClose()).append(" ").append(objs[i].getPrePosition()).append(" ").append(objs[i].getPreSettle()).append(" ");
-
-			System.out.println(sb.toString());
-		}
-	}
-
-	void test_getCodeInfo() {
-
-		Code objs = client.getCodeInfo(m_testCode);
-
-		if (objs == null) {
-			System.out.print("Fail to call getCodeInfo(?)\n");
-			return;
-		}
-
-		System.out.print("Success to call getCodeInfo(?)\n");
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(objs.getCode()).append(" ").append(objs.getWindCode()).append(" ").append(objs.getMarket()).append(" ").append(objs.getCNName()).append(" ").append(objs.getENName()).append(" ").append(objs.getType()).append(" ");
-
-		System.out.println(sb.toString());
-
-	}
+	//	void test_getCodeInfo() {
+	//
+	//		Code objs = client.getCodeInfo(m_testCode);
+	//
+	//		if (objs == null) {
+	//			System.out.print("Fail to call getCodeInfo(?)\n");
+	//			return;
+	//		}
+	//
+	//		System.out.print("Success to call getCodeInfo(?)\n");
+	//		StringBuilder sb = new StringBuilder();
+	//
+	//		sb.append(objs.getCode()).append(" ").append(objs.getWindCode()).append(" ").append(objs.getMarket()).append(" ").append(objs.getCNName()).append(" ").append(objs.getENName()).append(" ").append(objs.getType()).append(" ");
+	//
+	//		System.out.println(sb.toString());
+	//
+	//	}
 
 	void getTransaction(String windCode, int date) {
 		ReqTransaction req = new ReqTransaction();
@@ -620,10 +620,15 @@ public class Wddl {
 		}
 
 		long startTime = System.currentTimeMillis();
-		processCode(taskTokens[2], Integer.parseInt(taskTokens[1]));
+		String date = taskTokens[1];
+		String windCode = taskTokens[2];
+
+		initDateDir(date);
+
+		processCode(windCode, Integer.parseInt(date));
 
 		nextTaskLine++;
-		logDlTask(taskTokens[2], taskTokens[1], nextTaskLine, startTime);
+		logDlTask(windCode, date, nextTaskLine, startTime);
 	}
 
 	private void processCode(String windCode, int date) {
