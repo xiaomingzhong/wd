@@ -636,6 +636,8 @@ public class Wddl {
 
 	private void processCode(String windCode, int date) {
 		try {
+			long startTime = System.currentTimeMillis();
+
 			System.out.println("---------- Processing download task: " + date + " " + windCode + " ----------");
 			//			File dataFile = new File(dir, code.getCode() + ".txt");
 			//
@@ -675,6 +677,9 @@ public class Wddl {
 			} catch (Exception ex) {
 				System.out.println("Fail to call getOrderQueue(?). Exception: " + ex.getMessage());
 			}
+
+			long endTime = System.currentTimeMillis();
+			System.out.println("---------- Processing download task: " + date + " " + windCode + " ---------- Time(ms): " + (endTime - startTime));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
